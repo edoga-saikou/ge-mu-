@@ -2,118 +2,102 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>爆弾サバイバル</title>
+<title>ゾンビ回避サバイバル</title>
 <style>
 body{
     margin:0;
-    background:#111;
     overflow:hidden;
-    font-family:sans-serif;
+    background:#111;
     color:white;
+    font-family:sans-serif;
     text-align:center;
 }
-h1{
-    margin-top:20px;
-}
-#score, #timer{
-    font-size:20px;
-}
-.circle{
+h1{margin-top:10px;}
+#info{position:fixed;top:40px;width:100%;}
+.player{
+    width:30px;
+    height:30px;
+    background:cyan;
     position:absolute;
-    width:60px;
-    height:60px;
     border-radius:50%;
-    cursor:pointer;
 }
-.good{
-    background:lime;
-}
-.bad{
+.zombie{
+    width:30px;
+    height:30px;
     background:red;
-}
-button{
-    padding:10px 30px;
-    border:none;
-    border-radius:20px;
-    background:white;
-    font-weight:bold;
-    cursor:pointer;
-    margin-top:20px;
+    position:absolute;
+    border-radius:50%;
 }
 </style>
 </head>
 <body>
 
-<h1>💣 爆弾サバイバル 💣</h1>
-<p id="score">スコア: 0</p>
-<p id="timer">残り時間: 30</p>
-<button onclick="startGame()">スタート</button>
+<h1>🧟 ゾンビ回避サバイバル 🧟</h1>
+<p id="info">マウスで逃げろ！</p>
+
+<div id="player" class="player"></div>
 
 <script>
-let score = 0;
-let time = 30;
-let playing = false;
-let gameInterval;
-let timerInterval;
+const player = document.getElementById("player");
+let zombies = [];
+let playing = true;
+let startTime = Date.now();
 
-function startGame(){
-    score = 0;
-    time = 30;
-    playing = true;
-    document.getElementById("score").textContent = "スコア: 0";
-    document.getElementById("timer").textContent = "残り時間: 30";
+player.style.left = window.innerWidth/2 + "px";
+player.style.top = window.innerHeight/2 + "px";
 
-    gameInterval = setInterval(spawnCircle, 700);
-    timerInterval = setInterval(()=>{
-        time--;
-        document.getElementById("timer").textContent = "残り時間: " + time;
-        if(time <= 0){
-            endGame("⏰ 時間切れ！最終スコア: " + score);
-        }
-    },1000);
+document.addEventListener("mousemove", e=>{
+    if(!playing) return;
+    player.style.left = e.clientX - 15 + "px";
+    player.style.top = e.clientY - 15 + "px";
+});
+
+function spawnZombie(){
+    const z = document.createElement("div");
+    z.className="zombie";
+    z.style.left = Math.random()*window.innerWidth + "px";
+    z.style.top = Math.random()*window.innerHeight + "px";
+    document.body.appendChild(z);
+    zombies.push(z);
 }
 
-function spawnCircle(){
+function moveZombies(){
     if(!playing) return;
 
-    const circle = document.createElement("div");
-    circle.classList.add("circle");
+    const px = player.offsetLeft;
+    const py = player.offsetTop;
 
-    const isBad = Math.random() < 0.3;
-    if(isBad){
-        circle.classList.add("bad");
-    } else {
-        circle.classList.add("good");
-    }
+    zombies.forEach(z=>{
+        const zx = z.offsetLeft;
+        const zy = z.offsetTop;
 
-    circle.style.left = Math.random() * (window.innerWidth - 60) + "px";
-    circle.style.top = Math.random() * (window.innerHeight - 60) + "px";
+        const dx = px - zx;
+        const dy = py - zy;
+        const dist = Math.sqrt(dx*dx + dy*dy);
 
-    circle.onclick = function(){
-        if(!playing) return;
+        z.style.left = zx + dx/dist*1.5 + "px";
+        z.style.top = zy + dy/dist*1.5 + "px";
 
-        if(isBad){
-            endGame("💥 爆弾を押した！スコア: " + score);
-        } else {
-            score++;
-            document.getElementById("score").textContent = "スコア: " + score;
+        if(dist < 25){
+            endGame();
         }
-        circle.remove();
-    };
+    });
 
-    document.body.appendChild(circle);
-
-    setTimeout(()=>{
-        circle.remove();
-    },1000);
+    requestAnimationFrame(moveZombies);
 }
 
-function endGame(message){
+function endGame(){
     playing = false;
-    clearInterval(gameInterval);
-    clearInterval(timerInterval);
-    alert(message);
+    const time = ((Date.now()-startTime)/1000).toFixed(2);
+    alert("💀 捕まった！生存時間: "+time+"秒");
+    location.reload();
 }
+
+setInterval(()=>{
+    if(playing) spawnZombie();
+},3000);
+
+moveZombies();
 </script>
 
 </body>
