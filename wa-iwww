@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>爆弾サバイバル</title>
+<style>
+body{
+    margin:0;
+    background:#111;
+    overflow:hidden;
+    font-family:sans-serif;
+    color:white;
+    text-align:center;
+}
+h1{
+    margin-top:20px;
+}
+#score, #timer{
+    font-size:20px;
+}
+.circle{
+    position:absolute;
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    cursor:pointer;
+}
+.good{
+    background:lime;
+}
+.bad{
+    background:red;
+}
+button{
+    padding:10px 30px;
+    border:none;
+    border-radius:20px;
+    background:white;
+    font-weight:bold;
+    cursor:pointer;
+    margin-top:20px;
+}
+</style>
+</head>
+<body>
+
+<h1>💣 爆弾サバイバル 💣</h1>
+<p id="score">スコア: 0</p>
+<p id="timer">残り時間: 30</p>
+<button onclick="startGame()">スタート</button>
+
+<script>
+let score = 0;
+let time = 30;
+let playing = false;
+let gameInterval;
+let timerInterval;
+
+function startGame(){
+    score = 0;
+    time = 30;
+    playing = true;
+    document.getElementById("score").textContent = "スコア: 0";
+    document.getElementById("timer").textContent = "残り時間: 30";
+
+    gameInterval = setInterval(spawnCircle, 700);
+    timerInterval = setInterval(()=>{
+        time--;
+        document.getElementById("timer").textContent = "残り時間: " + time;
+        if(time <= 0){
+            endGame("⏰ 時間切れ！最終スコア: " + score);
+        }
+    },1000);
+}
+
+function spawnCircle(){
+    if(!playing) return;
+
+    const circle = document.createElement("div");
+    circle.classList.add("circle");
+
+    const isBad = Math.random() < 0.3;
+    if(isBad){
+        circle.classList.add("bad");
+    } else {
+        circle.classList.add("good");
+    }
+
+    circle.style.left = Math.random() * (window.innerWidth - 60) + "px";
+    circle.style.top = Math.random() * (window.innerHeight - 60) + "px";
+
+    circle.onclick = function(){
+        if(!playing) return;
+
+        if(isBad){
+            endGame("💥 爆弾を押した！スコア: " + score);
+        } else {
+            score++;
+            document.getElementById("score").textContent = "スコア: " + score;
+        }
+        circle.remove();
+    };
+
+    document.body.appendChild(circle);
+
+    setTimeout(()=>{
+        circle.remove();
+    },1000);
+}
+
+function endGame(message){
+    playing = false;
+    clearInterval(gameInterval);
+    clearInterval(timerInterval);
+    alert(message);
+}
+</script>
+
+</body>
+</html>
